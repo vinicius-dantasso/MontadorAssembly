@@ -229,6 +229,7 @@ for line in fileAsm:
         binaryValue = format32(binaryValue[2:])
         binary.append(binaryValue)
         num.clear()
+        continue
     elif(line.__contains__("mfhi")):
         for item in separatedLine:
             if(item.isdigit()):
@@ -327,15 +328,9 @@ for line in fileAsm:
         for item in separatedLine:
             if(item.isdigit()):
                 num.append(int(item))
-        binary.append(tabelaI(opCode[13], num))
-        num.clear()
-    elif(line.__contains__("sw")):
-        for item in separatedLine:
-            if(item.isdigit()):
-                num.append(int(item))
             
         if(num.__len__() == 3):
-            binaryValue = bin((opCode[16] << 26 | num[2] << 21 | num[0] << 16 | num[1]))
+            binaryValue = bin((opCode[13] << 26 | num[2] << 21 | num[0] << 16 | num[1]))
             binaryValue = format32(binaryValue[2:])
             binary.append(binaryValue)
             num.clear()
@@ -345,7 +340,27 @@ for line in fileAsm:
                 i+=1
                 if(line.__contains__(label)):
                     i-=1
-                    binaryValue = bin((opCode[16] << 26 | num[1] << 21 | num[0] << 16 | labelCount[i]))
+                    binaryValue = bin((opCode[13] << 26 | num[1] << 21 | num[0] << 16 | labelCount[i]))
+                    binaryValue = format32(binaryValue[2:])
+                    binary.append(binaryValue)
+                    num.clear()
+    elif(line.__contains__("sw")):
+        for item in separatedLine:
+            if(item.isdigit()):
+                num.append(int(item))
+            
+        if(num.__len__() == 3):
+            binaryValue = bin((opCode[14] << 26 | num[2] << 21 | num[0] << 16 | num[1]))
+            binaryValue = format32(binaryValue[2:])
+            binary.append(binaryValue)
+            num.clear()
+        elif(num.__len__() < 3):
+            i=0
+            for label in saveLabel:
+                i+=1
+                if(line.__contains__(label)):
+                    i-=1
+                    binaryValue = bin((opCode[14] << 26 | num[1] << 21 | num[0] << 16 | labelCount[i]))
                     binaryValue = format32(binaryValue[2:])
                     binary.append(binaryValue)
                     num.clear()
