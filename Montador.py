@@ -1,3 +1,8 @@
+##########################################################
+#Equipe: FRANCISCO NÍCOLAS FERNANDES BARRÊTO             #
+#        VINICIUS DANTAS DE SOUSA                        #
+##########################################################
+
 import re
 
 #Inicializando os valores das tabelas 
@@ -57,9 +62,14 @@ def tabelaJ(opcode):
         i+=1
         if(line.__contains__(label)):
             i-=1
-            adress = 1048576  + (int)((2**labelCount[i])/4)
-            binaryValue = bin((opcode << 26 | adress))
-            binaryValue = format32(binaryValue[2:])
+            if(labelCount[i] != 1):
+                adress = 1048576  + (labelCount[i] - 1)
+                binaryValue = bin((opcode << 26 | adress))
+                binaryValue = format32(binaryValue[2:])
+            else:
+                adress = 1048576
+                binaryValue = bin((opcode << 26 | adress))
+                binaryValue = format32(binaryValue[2:])
             return binaryValue
 
 #Leitura do arquivo .asm
@@ -67,7 +77,9 @@ fileAsm = open(fileName)
 #Primeira Leitura para conferir os Labels
 for line in fileAsm:
     cont += 1
-    separatedLine = re.split(', |:|\$|\n', line)
+    separatedLine = re.split(', |:|\$|\n|\t', line)
+    while('' in separatedLine):
+        separatedLine.remove('')
     
     #Confere se a linha possui um Label e salva sua posição junto do seu nome
     if(line.__contains__(':')):
@@ -77,12 +89,12 @@ for line in fileAsm:
 fileAsm.close()
 
 #Segunda Leitura do arquivo .asm e criação do arquivo .bin
-fileBin = open("result.bin", 'w')
+fileBin = open(fileName.replace(".asm",".bin"), 'w')
 fileAsm = open(fileName)           
 
 for line in fileAsm:
     currentLine += 1
-    separatedLine = re.split(', |:|\$|\(|\)|\n', line)
+    separatedLine = re.split(',| ,|:|\$|\(|\)|\n|\t', line)
 
     #Verificações necessárias para evitar conflitos
     if(line.__contains__("addiu")): #Tabela I
@@ -96,6 +108,12 @@ for line in fileAsm:
             if(item.isdigit()):
                 num.append(int(item))
         binary.append(tabelaI(opCode[5], num))
+        num.clear()
+    elif(line.__contains__("addu")):
+        for item in separatedLine:
+            if(item.isdigit()):
+                num.append(int(item))
+        binary.append(tabelaR(opCode[0], num, funct[10]))
         num.clear()
     elif(line.__contains__("add")): #Tabela R
         for item in separatedLine:
@@ -167,6 +185,12 @@ for line in fileAsm:
                 num.append(item)
         binary.append(tabelaR(opCode[0], num, funct[16]))
         num.clear()
+    elif(line.__contains__("slti")):
+        for item in separatedLine:
+            if(item.isdigit()):
+                num.append(int(item))
+        binary.append(tabelaI(opCode[7], num))
+        num.clear()
     elif(line.__contains__("slt")): #Tabela R
         for item in separatedLine:
             if(item.isdigit()):
@@ -185,7 +209,7 @@ for line in fileAsm:
         for item in separatedLine:
             if(item.isdigit()):
                 num.append(item)
-        binary.append(tabelaR(opCode[0], num, funct[14]))
+        binary.append(tabelaR(opCode[0], num, funct[13]))
         num.clear()
     
 
@@ -199,7 +223,7 @@ for line in fileAsm:
         for item in separatedLine:
             if(item.isdigit()):
                 num.append(item)
-        binary.append(tabelaR(opCode[0], num, funct[15]))
+        binary.append(tabelaR(opCode[0], num, funct[14]))
         num.clear()
 
     ################################
@@ -269,6 +293,7 @@ for line in fileAsm:
                     binaryValue = bin((opCode[3] << 26 | num[0] << 21 | num[1] << 16))
                     binaryValue = binaryValue[2:15] + adress
                     binaryValue = format32(binaryValue)
+                    break
             binary.append(binaryValue)
             num.clear()
     elif(line.__contains__("bne")):
@@ -287,9 +312,10 @@ for line in fileAsm:
                     i-=1
                     adress = labelCount[i] - (currentLine + 1)
                     adress = formatNegative(adress, 16)
-                    binaryValue = bin((opCode[4] << 10 | num[0] << 5 | num[1] << 5))
-                    binaryValue = binaryValue[2:] + adress
+                    binaryValue = bin((opCode[4] << 26 | num[0] << 21 | num[1] << 16))
+                    binaryValue = binaryValue[2:15] + adress
                     binaryValue = format32(binaryValue)
+                    break
             binary.append(binaryValue)
             num.clear()
     elif(line.__contains__("sltiu")):
@@ -297,12 +323,6 @@ for line in fileAsm:
             if(item.isdigit()):
                 num.append(int(item))
         binary.append(tabelaI(opCode[8], num))
-        num.clear()
-    elif(line.__contains__("slti")):
-        for item in separatedLine:
-            if(item.isdigit()):
-                num.append(int(item))
-        binary.append(tabelaI(opCode[7], num))
         num.clear()
     elif(line.__contains__("lui")):
         for item in separatedLine:
